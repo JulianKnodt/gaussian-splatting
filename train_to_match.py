@@ -28,6 +28,7 @@ def arguments():
   a.add_argument("--output", required=True)
   a.add_argument("--stats", help="Stat file")
   a.add_argument("--from-center", action="store_true", help="Set the eye at the origin")
+  a.add_argument("--from-upper-hemi", action="store_true", help="Only optimize upper hemisphere")
   lp = ModelParams(a)
   op = OptimizationParams(a)
   pp = PipelineParams(a)
@@ -85,9 +86,12 @@ def main():
     rand_dir = rand_dir / np.linalg.norm(rand_dir)
     rand_dir *= 8
 
-    look_at_mat = lookAt((np.random.random(3) - 0.5) * 5., -rand_dir/8., [0, -1, 0]) \
-      if args.from_center else \
-      lookAt(rand_dir, [0,0,0], [0, -1, 0])
+    if args.from_upper_hemi: rand_dir[1] = rand_dir[1].abs()
+    if args.from_center:
+      look_at_mat = lookAt(rand_dir, [0,0,0], [0, -1, 0])
+    else:
+      p = (np.random.random(3) - 0.5) * 5.
+      look_at_mat = lookAt(p, -rand_dir/8., [0, -1, 0])
 
     viewpoint_cam = MiniCam2(
       1024, 1024,
