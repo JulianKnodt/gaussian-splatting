@@ -29,6 +29,10 @@ def arguments():
   a.add_argument("--stats", help="Stat file")
   a.add_argument("--from-center", action="store_true", help="Set the eye at the origin")
   a.add_argument("--from-upper-hemi", action="store_true", help="Only optimize upper hemisphere")
+  a.add_argument(
+    "-lr", "--learning-rate", default=3e-3, type=float, help="Overall learning rate"
+  )
+  a.add_argument("--radius", default=8., type=float, help="Radius of camera")
   lp = ModelParams(a)
   op = OptimizationParams(a)
   pp = PipelineParams(a)
@@ -43,7 +47,7 @@ def main():
   init = GaussianModel(3, op.optimizer_type)
   init.load_ply(args.init)
 
-  lr = 5e-3
+  lr = args.learning_rate
   params = [
     {'params': [init._features_dc], 'lr': lr},
     {'params': [init._features_rest], 'lr': lr/15},
@@ -84,10 +88,11 @@ def main():
 
     rand_dir = np.random.randn(3)
     rand_dir = rand_dir / np.linalg.norm(rand_dir)
-    rand_dir *= 8
+    rand_dir *= args.radius
 
     if args.from_upper_hemi: rand_dir[1] = rand_dir[1].abs()
-    if args.from_center:
+
+    if not args.from_center:
       look_at_mat = lookAt(rand_dir, [0,0,0], [0, -1, 0])
     else:
       p = (np.random.random(3) - 0.5) * 5.
